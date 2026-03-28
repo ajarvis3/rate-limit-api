@@ -1,0 +1,8 @@
+rootProject.name = 'rate-limit-api'
+
+include 'api-gateway'
+include 'user-service'
+include 'subscription-service'
+include 'usage-service'
+include 'billing-service'
+include 'dunning-service'
