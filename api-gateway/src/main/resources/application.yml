@@ -5,6 +5,16 @@ spring:
     redis:
       host: localhost
       port: 6379
-
+  cloud:
+    gateway:
+      routes:
+        - id: serviceName #Fill in real names when they're determined
+          uri: http://service:8080
+          predicates:
+            - Path=/service/**
+        - id: anotherService
+          uri: http://another-service:8080
+          predicates:
+            - Path=/another-service/**
 server:
   port: 8080
