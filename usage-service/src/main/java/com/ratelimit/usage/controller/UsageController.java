@@ -1,24 +1,31 @@
 package com.ratelimit.usage.controller;
 
 import com.ratelimit.usage.dto.UsageResponseDTO;
-import org.springframework.stereotype.Controller;
+import com.ratelimit.usage.repository.UsageRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("/usage")
 public class UsageController {
 
-    @GetMapping
-    public UsageResponseDTO getUsage(@RequestHeader("X-User-Id") String userId) {
-        // For demonstration, we return a static usage response.
-        // In a real application, you would fetch this data from a database or another service.
-        response.setUserId(userId);
-        response.setApiCalls(10); // Example usage count
-        response.setDataTransferred(1024L); // Example data transferred in bytes
-        return response;
+    private final UsageRepository usageRepository;
 
+    public UsageController(UsageRepository usageRepository) {
+        this.usageRepository = usageRepository;
+    }
+
+    @GetMapping
+    public UsageResponseDTO getUsage(@RequestHeader("X-User-Id") String userId,
+                                     @RequestParam(name = "start", required = false) Long start,
+                                     @RequestParam(name = "end", required = false) Long end) {
+        long s = (start == null) ? 0L : start;
+        long e = (end == null) ? Long.MAX_VALUE : end;
+        long count = usageRepository.countByUserIdAndTimestampBetween(userId, s, e);
+        return new UsageResponseDTO(count);
     }
 }
 
