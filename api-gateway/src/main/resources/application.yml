@@ -8,10 +8,14 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: serviceName #Fill in real names when they're determined
-          uri: http://service:8080
+        - id: hello-api #Fill in real names when they're determined
+          uri: http://hello-api:8080
           predicates:
-            - Path=/service/**
+            - Path=/api/hello/**
+        - id: usage-service
+          uri: http://usage-service:8080
+          predicates:
+            - Path=/usage/**
         - id: anotherService
           uri: http://another-service:8080
           predicates:

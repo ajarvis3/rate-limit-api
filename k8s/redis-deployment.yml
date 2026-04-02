@@ -1,43 +1,3 @@
-""" 
-Kubernetes manifest to deploy Redis.
-
-Resources included:
-- Secret (redis-secret) with plaintext stringData.redis-password (default: changeme) — change this in-cluster for production
-- PersistentVolumeClaim (redis-data) to persist Redis data
-- Deployment (redis) running redis:7 with requirepass set from the secret
-- Service (redis) ClusterIP exposing port 6379
-
-Apply with:
-  kubectl apply -f k8s/redis-deployment.yml
-
-Notes:
-- This manifest sets a password via the Secret and starts Redis with --requirepass. If you prefer no password, remove the secret/env and the --requirepass argument.
-- Adjust storageClassName or remove the PVC if your cluster provisions storage differently.
-"""
-
-apiVersion: v1
-kind: Secret
-metadata:
-  name: redis-secret
-type: Opaque
-stringData:
-  # change this value before applying to a real cluster
-  redis-password: "changeme"
-
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: redis-data
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-  # storageClassName: "standard"   # uncomment or set to your cluster's storage class if required
-
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -54,47 +14,9 @@ spec:
     spec:
       containers:
         - name: redis
-          image: redis:7.0
-          # use sh -c so the environment variable is expanded into the command
-          args:
-            - sh
-            - -c
-            - |
-              redis-server --requirepass "$REDIS_PASSWORD" --appendonly yes
-          env:
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: redis-secret
-                  key: redis-password
+          image: redis:latest
           ports:
             - containerPort: 6379
-          volumeMounts:
-            - name: data
-              mountPath: /data
-          livenessProbe:
-            exec:
-              # use sh -c to supply the password to redis-cli and check for PONG
-              command:
-                - sh
-                - -c
-                - redis-cli -a "$REDIS_PASSWORD" ping | grep PONG
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - redis-cli -a "$REDIS_PASSWORD" ping | grep PONG
-            initialDelaySeconds: 5
-            periodSeconds: 5
-      volumes:
-        - name: data
-          persistentVolumeClaim:
-            claimName: redis-data
-
 ---
 apiVersion: v1
 kind: Service
@@ -104,8 +26,5 @@ spec:
   selector:
     app: redis
   ports:
-    - protocol: TCP
-      port: 6379
+    - port: 6379
       targetPort: 6379
-  type: ClusterIP
-

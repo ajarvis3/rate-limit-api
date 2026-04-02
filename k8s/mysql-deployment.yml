@@ -1,0 +1,123 @@
+"""
+MySQL StatefulSet deployment for local/k8s clusters.
+
+This manifest creates:
+- Secret `mysql-secret` with root and app user credentials (change before production)
+- ConfigMap `mysql-initdb-config` containing initial SQL scripts (also provided as files under k8s/mysql-init-scripts/)
+- Service `mysql` (ClusterIP) for cluster access
+- StatefulSet `mysql` (single replica) that mounts the ConfigMap into /docker-entrypoint-initdb.d so the scripts run on first init
+
+Notes:
+- The ConfigMap duplicates the example SQL from `k8s/mysql-init-scripts/01-init.sql` so a single `kubectl apply -f k8s/mysql-deployment.yml` will create the init scripts in-cluster. If you prefer to manage init scripts outside the manifest, comment out the ConfigMap block and create a configmap from files with:
+
+  kubectl create configmap mysql-initdb-config --from-file=k8s/mysql-init-scripts
+
+- The StatefulSet uses a volumeClaimTemplate for persistent MySQL data. Adjust `storage` and `storageClassName` to match your cluster.
+- This example runs MySQL 8 and is intended for development. For production use an external managed database, backups, and secret management.
+"""
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+stringData:
+  # change these values for your environment
+  mysql-root-password: "changeme"
+  mysql-database: "rate_limit_db"
+  mysql-user: "rate_limit_user"
+  mysql-password: "password"
+
+---
+# ConfigMap containing initial SQL scripts. The files are mounted into /docker-entrypoint-initdb.d
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-initdb-config
+data:
+  01-init.sql: |
+    -- Initial database and user for rate-limit-api
+    CREATE DATABASE IF NOT EXISTS rate_limit_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'app'@'%' IDENTIFIED BY 'apppass';
+    GRANT ALL PRIVILEGES ON rate_limit_db.* TO 'app'@'%';
+    FLUSH PRIVILEGES;
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  ports:
+    - port: 3306
+      name: mysql
+  selector:
+    app: mysql
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: "mysql"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-root-password
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-database
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-user
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: mysql-password
+          ports:
+            - containerPort: 3306
+              name: mysql
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+            - name: initdb-scripts
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: initdb-scripts
+          configMap:
+            name: mysql-initdb-config
+            defaultMode: 0775
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 5Gi
+        # Uncomment and set to your cluster's StorageClass if needed
+        # storageClassName: local-path
+

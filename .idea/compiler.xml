@@ -5,6 +5,24 @@
       <module name="api-gateway" options="-parameters" />
       <module name="api-gateway.main" options="-parameters" />
       <module name="api-gateway.test" options="-parameters" />
+      <module name="billing-service" options="-parameters" />
+      <module name="billing-service.main" options="-parameters" />
+      <module name="billing-service.test" options="-parameters" />
+      <module name="dunning-service" options="-parameters" />
+      <module name="dunning-service.main" options="-parameters" />
+      <module name="dunning-service.test" options="-parameters" />
+      <module name="hello-api" options="-parameters" />
+      <module name="hello-api.main" options="-parameters" />
+      <module name="hello-api.test" options="-parameters" />
+      <module name="subscription-service" options="-parameters" />
+      <module name="subscription-service.main" options="-parameters" />
+      <module name="subscription-service.test" options="-parameters" />
+      <module name="usage-service" options="-parameters" />
+      <module name="usage-service.main" options="-parameters" />
+      <module name="usage-service.test" options="-parameters" />
+      <module name="user-service" options="-parameters" />
+      <module name="user-service.main" options="-parameters" />
+      <module name="user-service.test" options="-parameters" />
     </option>
   </component>
 </project>

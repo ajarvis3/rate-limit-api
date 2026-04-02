@@ -14,9 +14,9 @@ public class RateLimitService {
     }
 
     /**
-     *
-     * @param exchange
-     * @return
+     * Checks if requests made to endpoints starting with /api exceed a threshold
+     * @param exchange the ServerWebExchange
+     * @return true if rate limit exceeded, false otherwise
      */
     public boolean checkRateLimit(ServerWebExchange exchange) {
         // Implement rate limiting logic using Redis
@@ -34,7 +34,7 @@ public class RateLimitService {
 
         // Temporary threshold
         // TODO: Update once "subscriptions" are fleshed out
-        int threshold = 100;
+        int threshold = 10;
         return count > threshold;
     }
 }

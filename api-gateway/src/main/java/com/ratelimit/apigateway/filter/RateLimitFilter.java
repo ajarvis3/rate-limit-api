@@ -28,11 +28,11 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		log.info("RateLimitWebFilter: before chain");
-		if (rateLimitService.checkRateLimit(exchange)) {
+		String path = exchange.getRequest().getURI().getPath();
+		if (path.startsWith("/api") && rateLimitService.checkRateLimit(exchange)) {
 			exchange.getResponse().setStatusCode(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS);
 			return exchange.getResponse().setComplete();
 		}
-		// Add non-blocking rate limiting logic here (use reactive Redis client etc.)
 		return chain.filter(exchange);
 	}
 
