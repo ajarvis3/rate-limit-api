@@ -1,0 +1,119 @@
+"""
+Keycloak Kubernetes deployment (development-mode example).
+
+This manifest creates:
+- Secret `keycloak-admin-secret` containing KEYCLOAK_ADMIN and KEYCLOAK_ADMIN_PASSWORD (stringData for convenience; change before production)
+- Deployment `keycloak` (single replica) using the official Keycloak image in dev mode
+- Service `keycloak` (ClusterIP) exposing port 8080
+
+Notes:
+- This example runs Keycloak in `start-dev` mode which is intended for local development and testing only (embedded H2 DB, no clustering). For production use, run Keycloak in production mode with an external database (Postgres), persistent storage, and TLS via Ingress/Service.
+- Adjust image tag to the version you require.
+"""
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keycloak-admin-secret
+type: Opaque
+stringData:
+  # Change these values before using in any shared environment
+  KEYCLOAK_ADMIN: admin
+  KEYCLOAK_ADMIN_PASSWORD: changeme
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+        - name: keycloak
+          # Use a stable Keycloak image tag appropriate for your environment
+          image: quay.io/keycloak/keycloak:21.1.1
+          imagePullPolicy: IfNotPresent
+          args:
+            # start in development mode (embedded DB). For production use a different startup and DB.
+            - start-dev
+            - --http-enabled=true
+            - --http-port=8080
+          env:
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin-secret
+                  key: KEYCLOAK_ADMIN
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin-secret
+                  key: KEYCLOAK_ADMIN_PASSWORD
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+spec:
+  selector:
+    app: keycloak
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP
+
+---
+# Optional: example Ingress (commented). Enable and configure TLS/host as appropriate.
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: keycloak-ingress
+# spec:
+#   rules:
+#     - host: keycloak.local
+#       http:
+#         paths:
+#           - path: /
+#             pathType: Prefix
+#             backend:
+#               service:
+#                 name: keycloak
+#                 port:
+#                   number: 8080
+

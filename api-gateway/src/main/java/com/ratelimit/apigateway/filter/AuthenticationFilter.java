@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -20,10 +22,18 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		log.info("AuthenticationWebFilter: before chain");
-		// Add reactive authentication checks here. If unauthorized, you can set response status and return
-		// exchange.getResponse().setComplete(). For now just continue.
-		return chain.filter(exchange)
-				.doFinally(signal -> log.info("AuthenticationWebFilter: after chain"));
+		return exchange.getPrincipal()
+				.cast(JwtAuthenticationToken.class)
+				.flatMap(token -> {
+					String keycloakId = token.getToken().getSubject();
+
+					ServerHttpRequest mutatedRequest = exchange.getRequest()
+							.mutate()
+							.header("X-User-Id", keycloakId)
+							.build();
+
+					return chain.filter(exchange.mutate().request(mutatedRequest).build());
+				});
 	}
 
     @Override
