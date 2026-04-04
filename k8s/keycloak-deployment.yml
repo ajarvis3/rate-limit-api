@@ -15,6 +15,7 @@ apiVersion: v1
 kind: Secret
 metadata:
   name: keycloak-admin-secret
+  namespace: ratelimit
 type: Opaque
 stringData:
   # Change these values before using in any shared environment
@@ -26,6 +27,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: keycloak
+  namespace: ratelimit
   labels:
     app: keycloak
 spec:
@@ -88,6 +90,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: keycloak
+  namespace: ratelimit
 spec:
   selector:
     app: keycloak
