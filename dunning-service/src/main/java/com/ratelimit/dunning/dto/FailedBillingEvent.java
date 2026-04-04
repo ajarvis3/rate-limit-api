@@ -1,10 +1,4 @@
 package com.ratelimit.dunning.dto;
 
-import java.math.BigDecimal;
-
-public record FailedBillingEvent(
-        String userId,
-        Long invoiceId,
-        BigDecimal amount,
-        long failedAt
-) {}
+// Moved to dto-common module; shim kept for compatibility
+public record FailedBillingEvent(String userId, Long invoiceId, java.math.BigDecimal amount, long failedAt) {}

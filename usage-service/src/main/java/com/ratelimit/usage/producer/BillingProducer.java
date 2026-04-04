@@ -1,6 +1,6 @@
-package com.ratelimit.usage.kafka;
+package com.ratelimit.usage.producer;
 
-import org.springframework.kafka.core.KafkaTemplate;
+import com.ratelimit.usage.config.KafkaTopicConfig;import com.ratelimit.usage.dto.UsageAggregateBillingMessage;import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service

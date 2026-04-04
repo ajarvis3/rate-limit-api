@@ -19,6 +19,7 @@ public class InvoiceService {
     }
 
     public void createInvoice(String userId, Long requestCount, long billedAt) {
+        // TODO need to get subscription rates for the user and calculate amount based on requestCount
         Invoice invoice = new Invoice(userId, billedAt, requestCount.doubleValue());
         repo.save(invoice);
     }

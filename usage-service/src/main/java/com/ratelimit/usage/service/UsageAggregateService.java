@@ -1,7 +1,7 @@
 package com.ratelimit.usage.service;
 
-import com.ratelimit.usage.kafka.BillingProducer;
-import com.ratelimit.usage.kafka.UsageAggregateBillingMessage;
+import com.ratelimit.usage.producer.BillingProducer;
+import com.ratelimit.usage.dto.UsageAggregateBillingMessage;
 import com.ratelimit.usage.repository.UsageAggregateRepository;
 import com.ratelimit.usage.repository.UsageRepository;
 import org.springframework.scheduling.annotation.Scheduled;
