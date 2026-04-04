@@ -18,6 +18,11 @@ public class InvoiceService {
         this.repo = repo;
     }
 
+    public void createInvoice(String userId, Long requestCount, long billedAt) {
+        Invoice invoice = new Invoice(userId, billedAt, requestCount.doubleValue());
+        repo.save(invoice);
+    }
+
     public InvoiceResponseDTO getById(Long id) {
         return repo.findById(id).map(this::toDto)
                 .orElseThrow(() -> new com.ratelimit.billing.exception.InvoiceNotFoundException("Invoice not found id=" + id));
