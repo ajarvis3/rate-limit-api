@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 
 public class UsageControllerTest {
@@ -23,7 +23,7 @@ public class UsageControllerTest {
 
     @Test
     void getUsage_returnsCountFromRepository() {
-        Mockito.when(usageRepository.countByUserIdAndTimestampBetween(eq("user1"), anyLong(), anyLong()))
+        Mockito.when(usageRepository.countByUserIdAndTimestampBetween(eq("user1"), any(), any()))
                 .thenReturn(42L);
 
         UsageResponseDTO response = usageController.getUsage("user1", 0L, 100L);

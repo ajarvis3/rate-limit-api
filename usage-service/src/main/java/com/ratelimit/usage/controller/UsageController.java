@@ -1,6 +1,7 @@
 package com.ratelimit.usage.controller;
 
 import com.ratelimit.usage.dto.UsageResponseDTO;
+import java.time.Instant;
 import com.ratelimit.usage.repository.UsageRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,8 +23,8 @@ public class UsageController {
     public UsageResponseDTO getUsage(@RequestHeader("X-User-Id") String userId,
                                      @RequestParam(name = "start", required = false) Long start,
                                      @RequestParam(name = "end", required = false) Long end) {
-        long s = (start == null) ? 0L : start;
-        long e = (end == null) ? Long.MAX_VALUE : end;
+        Instant s = (start == null) ? Instant.EPOCH : Instant.ofEpochMilli(start);
+        Instant e = (end == null) ? Instant.ofEpochMilli(Long.MAX_VALUE) : Instant.ofEpochMilli(end);
         long count = usageRepository.countByUserIdAndTimestampBetween(userId, s, e);
         return new UsageResponseDTO(count);
     }

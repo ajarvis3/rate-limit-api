@@ -1,6 +1,7 @@
 package com.ratelimit.usage.model;
 
 import jakarta.persistence.*;
+import java.time.Instant;
 
 @Entity
 @Table(name = "usage")
@@ -11,16 +12,16 @@ public class ApiUsage {
 
     private String userId;
 
-    private String requestId;
+    private Long requestCount;
 
-    private Long timestamp;
+    private Instant timestamp;
     
     public ApiUsage() {
     }
 
-    public ApiUsage(String userId, String requestId, Long timestamp) {
+    public ApiUsage(String userId, Long requestCount, Instant timestamp) {
         this.userId = userId;
-        this.requestId = requestId;
+        this.requestCount = requestCount;
         this.timestamp = timestamp;
     }
 
@@ -36,19 +37,19 @@ public class ApiUsage {
         this.userId = userId;
     }
 
-    public String getRequestId() {
-        return requestId;
+    public Long getRequestCount() {
+        return requestCount;
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
+    public void setRequestCount(Long requestCount) {
+        this.requestCount = requestCount;
     }
 
-    public Long getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Long timestamp) {
+    public void setTimestamp(Instant timestamp) {
         this.timestamp = timestamp;
     }
 }
