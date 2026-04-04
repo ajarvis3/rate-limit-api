@@ -1,5 +1,7 @@
 package com.ratelimit.usage.service;
 
+import com.ratelimit.usage.kafka.BillingProducer;
+import com.ratelimit.usage.kafka.UsageAggregateBillingMessage;
 import com.ratelimit.usage.repository.UsageAggregateRepository;
 import com.ratelimit.usage.repository.UsageRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,10 +14,12 @@ public class UsageAggregateService {
 
     UsageRepository usageRepository;
     UsageAggregateRepository usageAggregateRepository;
+    BillingProducer billingProducer;
 
-    public UsageAggregateService(UsageAggregateRepository usageAggregateRepository, UsageRepository usageRepository) {
+    public UsageAggregateService(UsageAggregateRepository usageAggregateRepository, UsageRepository usageRepository, BillingProducer billingProducer) {
         this.usageAggregateRepository = usageAggregateRepository;
         this.usageRepository = usageRepository;
+        this.billingProducer = billingProducer;
     }
 
     @Scheduled(fixedDelay = 600_000) // every 10 minutes
@@ -29,6 +33,15 @@ public class UsageAggregateService {
                     aggregate.setLastUpdated(now);
                 }
                 usageAggregateRepository.save(aggregate);
+
+                if (now.isAfter(aggregate.getTimestampEnd())) {
+                    billingProducer.sendBillingMessage(new UsageAggregateBillingMessage(
+                            aggregate.getUserId(),
+                            aggregate.getRequestCount(),
+                            aggregate.getLastUpdated(),
+                            aggregate.getTimestampStart(),
+                            aggregate.getTimestampEnd()));
+                }
             });
     }
 }
