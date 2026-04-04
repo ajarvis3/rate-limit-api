@@ -1,4 +1,0 @@
-package com.ratelimit.subscription.dto;
-
-// Moved to dto-common module. Keep an empty shim or delete this file.
-public record SubscriptionDTO(String userId, String planId) {}

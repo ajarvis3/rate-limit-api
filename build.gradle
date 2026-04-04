@@ -34,3 +34,17 @@ subprojects {
         useJUnitPlatform()
     }
 }
+
+// Ensure dto-common is built before other subprojects when running common lifecycle tasks
+gradle.projectsEvaluated {
+    def dtoProjectPath = ':dto-common'
+    rootProject.subprojects.findAll { it.path != dtoProjectPath }.each { proj ->
+        // Wire common lifecycle tasks to depend on dto-common equivalents if they exist
+        ['assemble', 'build', 'check'].each { taskName ->
+            proj.tasks.matching { t -> t.name == taskName }.configureEach { t ->
+                t.dependsOn "${dtoProjectPath}:${taskName}"
+            }
+        }
+    }
+}
+

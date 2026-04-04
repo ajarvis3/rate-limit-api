@@ -1,4 +1,0 @@
-package com.ratelimit.usage.dto;
-
-// Moved to dto-common module
-public record UsageResponseDTO(long numberOfRequests) {}
