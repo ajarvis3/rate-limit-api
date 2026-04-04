@@ -14,13 +14,20 @@ public class Invoice {
     private long billedAt;
 
     private Double amount;
+    
+    private String subscription;
+    
+    private String status;
 
-    public Invoice() {}
+    public Invoice() {
+    }
 
-    public Invoice(String userId, long billedAt, Double amount) {
+    public Invoice(String userId, long billedAt, Double amount, String subscription) {
         this.userId = userId;
         this.billedAt = billedAt;
         this.amount = amount;
+        this.subscription = subscription;
+        this.status = "CREATED";
     }
 
     public Long getId() {
@@ -49,6 +56,22 @@ public class Invoice {
 
     public void setAmount(Double amount) {
         this.amount = amount;
+    }
+
+    public String getSubscription() {
+        return subscription;
+    }
+
+    public void setSubscription(String subscription) {
+        this.subscription = subscription;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }
 

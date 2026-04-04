@@ -18,8 +18,8 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
     properties:
-      spring.json.trusted.packages: com.ratelimit.billing.kafka,com.ratelimit.usage.kafka,com.ratelimit.usage.dto
-      spring.json.value.default.type: com.ratelimit.usage.dto.UsageAggregateBillingMessage
+      spring.json.trusted.packages: com.ratelimit.billing.kafka,com.ratelimit.usage.kafka,com.ratelimit.usage.dto,com.ratelimit.subscription.dto
+      spring.json.value.default.type: com.ratelimit.subscription.dto.SubscriptionBillingDTO
       spring.json.use.type.headers: false
 
 server:

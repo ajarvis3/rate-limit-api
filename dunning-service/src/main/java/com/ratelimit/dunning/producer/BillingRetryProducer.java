@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class BillingRetryProducer {
 
-    static final String TOPIC = "billing.retry";
+    static final String TOPIC = "billing-retry";
 
     private final KafkaTemplate<String, FailedBillingEvent> kafkaTemplate;
 

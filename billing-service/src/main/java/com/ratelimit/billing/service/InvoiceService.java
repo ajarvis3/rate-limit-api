@@ -14,14 +14,17 @@ public class InvoiceService {
 
     private final InvoiceRepository repo;
 
-    public InvoiceService(InvoiceRepository repo) {
+    private final BillingService billingService;
+
+    public InvoiceService(InvoiceRepository repo, BillingService billingService) {
         this.repo = repo;
+        this.billingService = billingService;
     }
 
-    public void createInvoice(String userId, Long requestCount, long billedAt) {
-        // TODO need to get subscription rates for the user and calculate amount based on requestCount
-        Invoice invoice = new Invoice(userId, billedAt, requestCount.doubleValue());
+    public void createInvoice(String userId, Long requestCount, long billedAt, String subscription) {
+        Invoice invoice = new Invoice(userId, billedAt, requestCount.doubleValue(), subscription);
         repo.save(invoice);
+        billingService.processInvoice(invoice);
     }
 
     public InvoiceResponseDTO getById(Long id) {
