@@ -3,6 +3,8 @@ package com.ratelimit.billing.service;
 import com.ratelimit.billing.dto.InvoiceResponseDTO;
 import com.ratelimit.billing.model.Invoice;
 import com.ratelimit.billing.repository.InvoiceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class InvoiceService {
+
+    private static final Logger log = LoggerFactory.getLogger(InvoiceService.class);
 
     private final InvoiceRepository repo;
 
@@ -22,6 +26,13 @@ public class InvoiceService {
         // TODO need to get subscription rates for the user and calculate amount based on requestCount
         Invoice invoice = new Invoice(userId, billedAt, requestCount.doubleValue());
         repo.save(invoice);
+    }
+
+    public void retryBilling(Long invoiceId, Double amount) {
+        repo.findById(invoiceId).ifPresentOrElse(invoice -> {
+            invoice.setAmount(amount);
+            repo.save(invoice);
+        }, () -> log.warn("retryBilling: invoice not found for id={}", invoiceId));
     }
 
     public InvoiceResponseDTO getById(Long id) {

@@ -18,7 +18,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JacksonJsonDeserializer
     properties:
-      spring.json.trusted.packages: com.ratelimit.billing.kafka,com.ratelimit.usage.kafka
+      spring.json.trusted.packages: com.ratelimit.billing.kafka,com.ratelimit.usage.kafka,com.ratelimit.dunning.dto
       spring.json.value.default.type: com.ratelimit.billing.dto.UsageAggregateBillingMessage
       spring.json.use.type.headers: false
 
