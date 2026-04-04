@@ -1,0 +1,49 @@
+{
+  "info": {
+    "name": "RateLimit API - Hello API (via API Gateway)",
+    "_postman_id": "4f6a1b1a-0000-4000-8000-000000000001",
+    "description": "Collection to call the Hello API through the API Gateway.\nUse the provided environment to set `api_gateway_url` (defaults to http://localhost:8080).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /api/hello",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{api_gateway_url}}/api/hello",
+          "host": [
+            "{{api_gateway_url}}"
+          ],
+          "path": [
+            "api",
+            "hello"
+          ]
+        },
+        "description": "Calls the Hello API endpoint through the API Gateway."
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "// Basic assertions to validate the Hello API response",
+              "pm.test('Status code is 200', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response contains \"hello\"', function () {",
+              "    var txt = pm.response.text().toLowerCase();",
+              "    pm.expect(txt).to.include('hello');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+

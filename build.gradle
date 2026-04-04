@@ -48,3 +48,59 @@ gradle.projectsEvaluated {
     }
 }
 
+// -----------------------------------------------------------------------------
+// Docker image build helper
+// Adds tasks to build Docker images for each microservice in this multi-project repo.
+// For each service this will depend on that subproject's `bootJar` task (if present)
+// and then run `docker build` using the service's Dockerfile.
+// Usage: gradlew buildDockerImages
+// -----------------------------------------------------------------------------
+
+def microservices = [
+    'api-gateway',
+    'billing-service',
+    'dunning-service',
+    'hello-api',
+    'subscription-service',
+    'usage-service',
+    'user-service'
+]
+
+microservices.each { svc ->
+    // task name: dockerBuildApiGateway, dockerBuildBillingService, etc.
+    def taskName = "dockerBuild${svc.replaceAll(/[-_](\w)/) { it[1].toUpperCase() }.capitalize()}"
+    tasks.register(taskName, Exec) {
+        group = 'docker'
+        description = "Build Docker image for ${svc} using ${svc}/Dockerfile"
+
+        // If the project exists and has a bootJar task, depend on it so jar is built first
+        try {
+            def proj = project(":${svc}")
+            proj.tasks.matching { it.name == 'build' }.configureEach { t ->
+                dependsOn t
+            }
+        } catch (org.gradle.api.UnknownProjectException ignored) {
+            // project not present in this multi-project build; continue and let docker build fail if needed
+        }
+
+        // Build image tag - use 'latest' tag so Docker Desktop shows a common tag
+        def imageTag = "ratelimit/${svc}:latest"
+
+        // Execute docker build from the repository root (projectDir)
+        commandLine 'docker', 'build', '-t', imageTag, '-f', "${svc}/Dockerfile", '.'
+    }
+}
+
+// Aggregator task
+tasks.register('buildDockerImages') {
+    group = 'docker'
+    description = 'Build Docker images for all microservices'
+    dependsOn microservices.collect { svc ->
+        def name = "dockerBuild${svc.replaceAll(/[-_](\w)/) { it[1].toUpperCase() }.capitalize()}"
+        tasks.named(name)
+    }
+    doFirst {
+        println "Building Docker images for: ${microservices.join(', ')}"
+    }
+}
+
