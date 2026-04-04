@@ -31,3 +31,4 @@ build/
 # Keep the Gradle wrapper jar
 !gradle/wrapper/gradle-wrapper.jar
 
+.idea

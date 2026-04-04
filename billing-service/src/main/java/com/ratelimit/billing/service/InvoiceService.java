@@ -18,16 +18,23 @@ public class InvoiceService {
         this.repo = repo;
     }
 
-    public Optional<InvoiceResponseDTO> getById(Long id) {
-        return repo.findById(id).map(this::toDto);
+    public InvoiceResponseDTO getById(Long id) {
+        return repo.findById(id).map(this::toDto)
+                .orElseThrow(() -> new com.ratelimit.billing.exception.InvoiceNotFoundException("Invoice not found id=" + id));
     }
 
-    public Optional<InvoiceResponseDTO> getMostRecentByKeycloakId(String keycloakId) {
-        return Optional.ofNullable(repo.findTopByUserIdOrderByBilledAtDesc(keycloakId)).map(this::toDto);
+    public InvoiceResponseDTO getMostRecentByUserId(String userId) {
+        return repo.findTopByUserIdOrderByBilledAtDesc(userId)
+                .map(this::toDto)
+                .orElseThrow(() -> new com.ratelimit.billing.exception.InvoiceNotFoundException("No invoices found for user=" + userId));
     }
 
     public List<InvoiceResponseDTO> getInvoicesForUserBetween(String userId, long start, long end) {
-        return repo.findByUserIdAndBilledAtBetween(userId, start, end).stream().map(this::toDto).collect(Collectors.toList());
+        List<Invoice> list = repo.findByUserIdAndBilledAtBetween(userId, start, end);
+        if (list == null || list.isEmpty()) {
+            throw new com.ratelimit.billing.exception.InvoiceNotFoundException("No invoices found for user=" + userId + " between " + start + " and " + end);
+        }
+        return list.stream().map(this::toDto).collect(Collectors.toList());
     }
 
     private InvoiceResponseDTO toDto(Invoice i) {

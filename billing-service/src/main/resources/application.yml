@@ -2,10 +2,10 @@ spring:
   application:
     name: billing-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/billing_db
-    username: postgres
-    password: postgres
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:mysql://localhost:3306/billing_db
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update

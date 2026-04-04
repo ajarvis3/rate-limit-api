@@ -23,7 +23,7 @@ metadata:
 type: Opaque
 stringData:
   # change these values for your environment
-  mysql-root-password: "changeme"
+  mysql-root-password: "password"
   mysql-database: "rate_limit_db"
   mysql-user: "rate_limit_user"
   mysql-password: "password"

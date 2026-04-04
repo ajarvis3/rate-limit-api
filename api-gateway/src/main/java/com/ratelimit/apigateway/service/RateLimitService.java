@@ -23,6 +23,7 @@ public class RateLimitService {
         // For example, use a key based on client IP and endpoint, and increment a counter with expiration
         String userId = exchange.getRequest().getHeaders().getFirst("X-User-Id");
         String key = "rate_limit:" + userId;
+        String usageKey = "usage:" + userId;
         long systemTime = System.currentTimeMillis();
         long startTime = systemTime - 60000;
 
@@ -31,6 +32,8 @@ public class RateLimitService {
         redisTemplate.opsForZSet().remove(key, 0, startTime);
 
         Long count = redisTemplate.opsForZSet().count(key, 0, systemTime);
+
+        redisTemplate.opsForValue().increment(usageKey);
 
         // Temporary threshold
         // TODO: Update once "subscriptions" are fleshed out

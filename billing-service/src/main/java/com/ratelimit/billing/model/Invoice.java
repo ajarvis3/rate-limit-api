@@ -1,7 +1,6 @@
 package com.ratelimit.billing.model;
 
 import jakarta.persistence.*;
-import java.time.Instant;
 
 @Entity
 @Table(name = "invoice")
@@ -12,13 +11,13 @@ public class Invoice {
 
     private String userId;
 
-    private Instant billedAt;
+    private long billedAt;
 
     private Double amount;
 
     public Invoice() {}
 
-    public Invoice(String userId, Instant billedAt, Double amount) {
+    public Invoice(String userId, long billedAt, Double amount) {
         this.userId = userId;
         this.billedAt = billedAt;
         this.amount = amount;
@@ -36,11 +35,11 @@ public class Invoice {
         this.userId = userId;
     }
 
-    public Instant getBilledAt() {
+    public long getBilledAt() {
         return billedAt;
     }
 
-    public void setBilledAt(Instant billedAt) {
+    public void setBilledAt(long billedAt) {
         this.billedAt = billedAt;
     }
 
