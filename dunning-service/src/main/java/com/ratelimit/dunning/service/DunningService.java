@@ -33,7 +33,7 @@ public class DunningService {
         repository.save(record);
     }
 
-    @Scheduled(fixedDelay = 60_000)
+    @Scheduled(fixedDelay = 600_000)
     public void processRetries() {
         long now = System.currentTimeMillis();
         List<DunningRecord> due = repository.findByRetriedFalseAndRetryAfterLessThanEqual(now);

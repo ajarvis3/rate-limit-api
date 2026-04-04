@@ -1,4 +1,4 @@
-package com.ratelimit.usage.kafka;
+package com.ratelimit.usage.dto;
 
 import java.time.Instant;
 
@@ -7,5 +7,5 @@ public record UsageAggregateBillingMessage(
         Long requestCount,
         Instant lastUpdated,
         Instant periodStart,
-        Instant periodEnd) {
-}
+        Instant periodEnd) {}
+

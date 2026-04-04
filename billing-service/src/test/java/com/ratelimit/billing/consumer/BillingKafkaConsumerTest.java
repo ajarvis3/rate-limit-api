@@ -1,4 +1,4 @@
-package com.ratelimit.billing.kafka;
+package com.ratelimit.billing.consumer;
 
 import com.ratelimit.billing.service.InvoiceService;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +24,7 @@ public class BillingKafkaConsumerTest {
     @Test
     void handleUsageAggregate_createsInvoice_fromMessage() {
         Instant lastUpdated = Instant.ofEpochMilli(1_000_000L);
-        UsageAggregateBillingMessage message = new UsageAggregateBillingMessage(
+        com.ratelimit.billing.dto.UsageAggregateBillingMessage message = new com.ratelimit.billing.dto.UsageAggregateBillingMessage(
                 "user1",
                 42L,
                 lastUpdated,

@@ -1,6 +1,6 @@
-package com.ratelimit.billing.kafka;
+package com.ratelimit.billing.consumer;
 
-import com.ratelimit.billing.service.InvoiceService;
+import com.ratelimit.billing.dto.UsageAggregateBillingMessage;import com.ratelimit.billing.service.InvoiceService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 

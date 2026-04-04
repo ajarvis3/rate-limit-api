@@ -1,4 +1,4 @@
-package com.ratelimit.billing.kafka;
+package com.ratelimit.usage.dto;
 
 import java.time.Instant;
 

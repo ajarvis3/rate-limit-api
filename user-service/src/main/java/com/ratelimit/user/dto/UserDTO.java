@@ -1,6 +1,5 @@
 package com.ratelimit.user.dto;
 
-import java.time.Instant;
-
-public record UserDTO(String keycloakId, Instant createdAt) {}
+// Moved to dto-common module
+public record UserDTO(String keycloakId, java.time.Instant createdAt) {}
 
