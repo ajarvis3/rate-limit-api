@@ -4,13 +4,15 @@ import com.ratelimit.billing.model.Invoice;
 import com.ratelimit.billing.repository.InvoiceRepository;
 import com.ratelimit.dunning.dto.FailedBillingEvent;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
+
+import java.util.concurrent.ThreadLocalRandom;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,46 +35,39 @@ class BillingServiceTest {
         billingService = new BillingService(invoiceRepository, kafkaTemplate);
     }
 
-    @RepeatedTest(20)
-    void processInvoice_setsStatusAndSavesInvoice() {
-        Invoice invoice = new Invoice("user-1", 1_000_000L, 99.99, "PREMIUM");
-        when(invoiceRepository.save(any(Invoice.class))).thenAnswer(inv -> inv.getArgument(0));
+    @Test
+    void processInvoice_whenFailed_setsStatusAndSendsFailedBillingEvent() {
+        try (MockedStatic<ThreadLocalRandom> mockedRandom = mockStatic(ThreadLocalRandom.class)) {
+            ThreadLocalRandom randomMock = mock(ThreadLocalRandom.class);
+            mockedRandom.when(ThreadLocalRandom::current).thenReturn(randomMock);
+            when(randomMock.nextBoolean()).thenReturn(true);
 
-        billingService.processInvoice(invoice);
+            Invoice invoice = new Invoice("user-1", 1_000_000L, 49.99, "FREE");
+            billingService.processInvoice(invoice);
 
-        assertThat(invoice.getStatus()).isIn("PAYMENT_COMPLETE", "PAYMENT_FAILED");
-        verify(invoiceRepository).save(invoice);
+            assertThat(invoice.getStatus()).isEqualTo("PAYMENT_FAILED");
+            verify(invoiceRepository).save(invoice);
+            ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
+            verify(kafkaTemplate).send(eq("billing-failed"), eq("user-1"), eventCaptor.capture());
+            FailedBillingEvent sentEvent = (FailedBillingEvent) eventCaptor.getValue();
+            assertThat(sentEvent.userId()).isEqualTo("user-1");
+            assertThat(sentEvent.amount()).isEqualByComparingTo("49.99");
+        }
     }
 
     @Test
-    void processInvoice_whenFailed_sendsFailedBillingEvent() {
-        // Spy on BillingService using a subclass that always returns failed
-        InvoiceRepository repo = mock(InvoiceRepository.class);
-        KafkaTemplate<String, Object> kafka = mock(KafkaTemplate.class);
-        BillingService alwaysFailService = new BillingService(repo, kafka) {
-            @Override
-            public void processInvoice(Invoice invoice) {
-                invoice.setStatus("PAYMENT_FAILED");
-                repo.save(invoice);
-                FailedBillingEvent event = new FailedBillingEvent(
-                        invoice.getUserId(),
-                        invoice.getId(),
-                        java.math.BigDecimal.valueOf(invoice.getAmount()),
-                        System.currentTimeMillis()
-                );
-                kafka.send("billing-failed", invoice.getUserId(), event);
-            }
-        };
+    void processInvoice_whenSuccessful_setsStatusCompleteAndDoesNotSendEvent() {
+        try (MockedStatic<ThreadLocalRandom> mockedRandom = mockStatic(ThreadLocalRandom.class)) {
+            ThreadLocalRandom randomMock = mock(ThreadLocalRandom.class);
+            mockedRandom.when(ThreadLocalRandom::current).thenReturn(randomMock);
+            when(randomMock.nextBoolean()).thenReturn(false);
 
-        Invoice invoice = new Invoice("user-1", 1_000_000L, 49.99, "FREE");
-        alwaysFailService.processInvoice(invoice);
+            Invoice invoice = new Invoice("user-1", 1_000_000L, 99.99, "PREMIUM");
+            billingService.processInvoice(invoice);
 
-        assertThat(invoice.getStatus()).isEqualTo("PAYMENT_FAILED");
-        verify(repo).save(invoice);
-        ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
-        verify(kafka).send(eq("billing-failed"), eq("user-1"), eventCaptor.capture());
-        FailedBillingEvent sentEvent = (FailedBillingEvent) eventCaptor.getValue();
-        assertThat(sentEvent.userId()).isEqualTo("user-1");
-        assertThat(sentEvent.amount()).isEqualByComparingTo("49.99");
+            assertThat(invoice.getStatus()).isEqualTo("PAYMENT_COMPLETE");
+            verify(invoiceRepository).save(invoice);
+            verifyNoInteractions(kafkaTemplate);
+        }
     }
 }
