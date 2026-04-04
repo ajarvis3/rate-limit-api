@@ -21,6 +21,8 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     @Bean
+    // JsonSerializer from spring-kafka is deprecated but remains functional; the recommended
+    // alternative requires additional configuration outside the scope of this scaffold.
     @SuppressWarnings("deprecation")
     public ProducerFactory<String, FailedBillingEvent> producerFactory() {
         Map<String, Object> props = new HashMap<>();

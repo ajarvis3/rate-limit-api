@@ -40,7 +40,7 @@ public class DunningService {
         for (DunningRecord record : due) {
             producer.sendRetry(record);
             record.setRetried(true);
-            repository.save(record);
         }
+        repository.saveAll(due);
     }
 }

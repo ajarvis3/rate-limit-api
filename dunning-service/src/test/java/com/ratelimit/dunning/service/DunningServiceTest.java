@@ -11,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +36,7 @@ class DunningServiceTest {
     @Test
     void recordFailedBilling_persistsRecordWithOneHourRetryDelay() {
         long failedAt = 1_000_000L;
-        FailedBillingEvent event = new FailedBillingEvent("user-1", 42L, 99.99, failedAt);
+        FailedBillingEvent event = new FailedBillingEvent("user-1", 42L, new BigDecimal("99.99"), failedAt);
 
         service.recordFailedBilling(event);
 
@@ -44,7 +45,7 @@ class DunningServiceTest {
         DunningRecord saved = captor.getValue();
         assertThat(saved.getUserId()).isEqualTo("user-1");
         assertThat(saved.getInvoiceId()).isEqualTo(42L);
-        assertThat(saved.getAmount()).isEqualTo(99.99);
+        assertThat(saved.getAmount()).isEqualByComparingTo(new BigDecimal("99.99"));
         assertThat(saved.getFailedAt()).isEqualTo(failedAt);
         assertThat(saved.getRetryAfter()).isEqualTo(failedAt + DunningService.RETRY_DELAY_MS);
         assertThat(saved.isRetried()).isFalse();
@@ -52,7 +53,7 @@ class DunningServiceTest {
 
     @Test
     void processRetries_sendsRetryAndMarksRetriedForDueRecords() {
-        DunningRecord due = new DunningRecord("user-2", 7L, 50.0, 0L, 0L);
+        DunningRecord due = new DunningRecord("user-2", 7L, new BigDecimal("50.00"), 0L, 0L);
         when(repository.findByRetriedFalseAndRetryAfterLessThanEqual(anyLong()))
                 .thenReturn(List.of(due));
 
@@ -60,7 +61,7 @@ class DunningServiceTest {
 
         verify(producer).sendRetry(due);
         assertThat(due.isRetried()).isTrue();
-        verify(repository).save(due);
+        verify(repository).saveAll(List.of(due));
     }
 
     @Test
@@ -71,6 +72,6 @@ class DunningServiceTest {
         service.processRetries();
 
         verifyNoInteractions(producer);
-        verify(repository, never()).save(any());
+        verify(repository).saveAll(List.of());
     }
 }
