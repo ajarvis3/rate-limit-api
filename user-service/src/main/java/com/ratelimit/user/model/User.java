@@ -2,13 +2,14 @@ package com.ratelimit.user.model;
 
 import jakarta.persistence.*;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String keycloakId;
@@ -22,7 +23,7 @@ public class User {
         this.createdAt = createdAt;
     }
 
-    public Integer getId() {
+    public UUID getId() {
         return id;
     }
 

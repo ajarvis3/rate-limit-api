@@ -1,6 +1,7 @@
 package com.ratelimit.user.dto;
 
 import java.time.Instant;
+import java.util.UUID;
 
-public record UserDTO(String keycloakId, Instant createdAt) {}
+public record UserDTO(UUID id, String keycloakId, Instant createdAt) {}
 

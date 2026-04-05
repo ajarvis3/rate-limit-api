@@ -10,9 +10,9 @@ public class BillingRetryProducer {
 
     static final String TOPIC = "billing-retry";
 
-    private final KafkaTemplate<String, FailedBillingEvent> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public BillingRetryProducer(KafkaTemplate<String, FailedBillingEvent> kafkaTemplate) {
+    public BillingRetryProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         this.kafkaTemplate = kafkaTemplate;
     }
 

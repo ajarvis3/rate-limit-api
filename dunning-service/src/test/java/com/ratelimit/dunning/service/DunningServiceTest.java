@@ -1,9 +1,12 @@
 package com.ratelimit.dunning.service;
 
+import com.ratelimit.billing.dto.PaymentFailedEvent;
 import com.ratelimit.dunning.dto.FailedBillingEvent;
 import com.ratelimit.dunning.model.DunningRecord;
 import com.ratelimit.dunning.producer.BillingRetryProducer;
+import com.ratelimit.dunning.producer.SubscriptionSuspendedProducer;
 import com.ratelimit.dunning.repository.DunningRepository;
+import com.ratelimit.subscription.dto.SubscriptionSuspendedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -26,11 +30,14 @@ class DunningServiceTest {
     @Mock
     private BillingRetryProducer producer;
 
+    @Mock
+    private SubscriptionSuspendedProducer suspendedProducer;
+
     private DunningService service;
 
     @BeforeEach
     void setUp() {
-        service = new DunningService(repository, producer);
+        service = new DunningService(repository, producer, suspendedProducer);
     }
 
     @Test
@@ -73,5 +80,29 @@ class DunningServiceTest {
 
         verifyNoInteractions(producer);
         verify(repository).saveAll(List.of());
+    }
+
+    @Test
+    void handlePaymentFailed_sendsSubscriptionSuspended_whenMaxAttemptsReached() {
+        UUID userId = UUID.randomUUID();
+        UUID invoiceId = UUID.randomUUID();
+        PaymentFailedEvent event = new PaymentFailedEvent(userId, invoiceId, DunningService.MAX_ATTEMPTS_BEFORE_SUSPEND);
+
+        service.handlePaymentFailed(event);
+
+        ArgumentCaptor<SubscriptionSuspendedEvent> captor = ArgumentCaptor.forClass(SubscriptionSuspendedEvent.class);
+        verify(suspendedProducer).sendSuspended(captor.capture());
+        assertThat(captor.getValue().userId()).isEqualTo(userId);
+    }
+
+    @Test
+    void handlePaymentFailed_doesNotSendSuspended_whenBelowMaxAttempts() {
+        UUID userId = UUID.randomUUID();
+        UUID invoiceId = UUID.randomUUID();
+        PaymentFailedEvent event = new PaymentFailedEvent(userId, invoiceId, 1);
+
+        service.handlePaymentFailed(event);
+
+        verifyNoInteractions(suspendedProducer);
     }
 }

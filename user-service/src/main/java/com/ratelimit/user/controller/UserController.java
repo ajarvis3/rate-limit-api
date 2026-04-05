@@ -4,6 +4,7 @@ import com.ratelimit.user.dto.UserDTO;
 import com.ratelimit.user.service.UserService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -16,8 +17,10 @@ public class UserController {
     }
 
     @GetMapping("/user/{keycloakId}")
-    public UserDTO getUser(@PathVariable("keycloakId") String keycloakId) {
-        return userService.findOrCreateByKeycloakId(keycloakId);
+    public UserDTO getUser(
+            @PathVariable("keycloakId") String keycloakId,
+            @RequestHeader(value = "X-User-Plan", required = false, defaultValue = "FREE") String planName) {
+        return userService.findOrCreateByKeycloakId(keycloakId, planName);
     }
 }
 

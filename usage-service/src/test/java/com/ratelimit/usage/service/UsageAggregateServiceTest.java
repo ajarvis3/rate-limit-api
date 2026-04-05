@@ -12,9 +12,12 @@ import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 public class UsageAggregateServiceTest {
@@ -72,4 +75,24 @@ public class UsageAggregateServiceTest {
 
         verify(billingProducer, never()).sendBillingMessage(any());
     }
+
+    @Test
+    void createAggregate_createsWithZeroRequestsAndPeriodStart() {
+        UUID userId = UUID.randomUUID();
+        Instant periodStart = Instant.now();
+        Instant periodEnd = periodStart.plusSeconds(30L * 24 * 3600);
+
+        when(usageAggregateRepository.save(any(UsageAggregate.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        UsageAggregate result = usageAggregateService.createAggregate(userId, periodStart, periodEnd);
+
+        assertNotNull(result);
+        assertEquals(userId.toString(), result.getUserId());
+        assertEquals(0L, result.getRequestCount());
+        assertEquals(periodStart, result.getLastUpdated());
+        assertEquals(periodStart, result.getTimestampStart());
+        assertEquals(periodEnd, result.getTimestampEnd());
+    }
 }
+

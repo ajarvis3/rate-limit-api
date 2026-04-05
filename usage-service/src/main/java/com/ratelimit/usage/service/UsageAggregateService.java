@@ -1,5 +1,6 @@
 package com.ratelimit.usage.service;
 
+import com.ratelimit.usage.model.UsageAggregate;
 import com.ratelimit.usage.producer.BillingProducer;
 import com.ratelimit.usage.dto.UsageAggregateBillingMessage;
 import com.ratelimit.usage.repository.UsageAggregateRepository;
@@ -8,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class UsageAggregateService {
@@ -20,6 +22,12 @@ public class UsageAggregateService {
         this.usageAggregateRepository = usageAggregateRepository;
         this.usageRepository = usageRepository;
         this.billingProducer = billingProducer;
+    }
+
+    public UsageAggregate createAggregate(UUID userId, Instant periodStart, Instant periodEnd) {
+        UsageAggregate aggregate = new UsageAggregate(
+                userId.toString(), 0L, periodStart, periodEnd, periodStart);
+        return usageAggregateRepository.save(aggregate);
     }
 
     @Scheduled(fixedDelay = 600_000) // every 10 minutes
