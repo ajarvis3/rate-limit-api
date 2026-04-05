@@ -19,6 +19,8 @@ public class Invoice {
     
     private String status;
 
+    private int attemptCount;
+
     public Invoice() {
     }
 
@@ -28,6 +30,7 @@ public class Invoice {
         this.amount = amount;
         this.subscription = subscription;
         this.status = "CREATED";
+        this.attemptCount = 0;
     }
 
     public Long getId() {
@@ -72,6 +75,14 @@ public class Invoice {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public int getAttemptCount() {
+        return attemptCount;
+    }
+
+    public void setAttemptCount(int attemptCount) {
+        this.attemptCount = attemptCount;
     }
 }
 

@@ -21,6 +21,8 @@ public class UsageAggregate {
 
     private Instant lastUpdated;
 
+    public UsageAggregate() {}
+
     public UsageAggregate(String userId, Long requestCount, Instant timestampStart, Instant timestampEnd, Instant lastUpdated) {
         this.userId = userId;
         this.requestCount = requestCount;

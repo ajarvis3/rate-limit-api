@@ -1,25 +1,33 @@
 package com.ratelimit.dunning.service;
 
+import com.ratelimit.billing.dto.PaymentFailedEvent;
 import com.ratelimit.dunning.dto.FailedBillingEvent;
 import com.ratelimit.dunning.model.DunningRecord;
 import com.ratelimit.dunning.producer.BillingRetryProducer;
+import com.ratelimit.dunning.producer.SubscriptionSuspendedProducer;
 import com.ratelimit.dunning.repository.DunningRepository;
+import com.ratelimit.subscription.dto.SubscriptionSuspendedEvent;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class DunningService {
 
     static final long RETRY_DELAY_MS = 3_600_000L; // 1 hour
+    static final int MAX_ATTEMPTS_BEFORE_SUSPEND = 3;
 
     private final DunningRepository repository;
     private final BillingRetryProducer producer;
+    private final SubscriptionSuspendedProducer suspendedProducer;
 
-    public DunningService(DunningRepository repository, BillingRetryProducer producer) {
+    public DunningService(DunningRepository repository, BillingRetryProducer producer,
+                          SubscriptionSuspendedProducer suspendedProducer) {
         this.repository = repository;
         this.producer = producer;
+        this.suspendedProducer = suspendedProducer;
     }
 
     public void recordFailedBilling(FailedBillingEvent event) {
@@ -31,6 +39,14 @@ public class DunningService {
                 event.failedAt() + RETRY_DELAY_MS
         );
         repository.save(record);
+    }
+
+    public void handlePaymentFailed(PaymentFailedEvent event) {
+        if (event.attemptCount() >= MAX_ATTEMPTS_BEFORE_SUSPEND) {
+            SubscriptionSuspendedEvent suspendedEvent = new SubscriptionSuspendedEvent(
+                    event.userId(), event.invoiceId());
+            suspendedProducer.sendSuspended(suspendedEvent);
+        }
     }
 
     @Scheduled(fixedDelay = 600_000)

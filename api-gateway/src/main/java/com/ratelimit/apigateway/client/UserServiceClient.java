@@ -14,9 +14,10 @@ public class UserServiceClient {
         this.webClient = builder.baseUrl("http://user-service:8081").build();
     }
 
-    public Mono<UserDTO> getOrCreateUser(String keycloakId) {
+    public Mono<UserDTO> getOrCreateUser(String keycloakId, String planTier) {
         return webClient.get()
                 .uri("/user/" + keycloakId)
+                .header("X-User-Plan", planTier)
                 .retrieve()
                 .bodyToMono(UserDTO.class);
     }

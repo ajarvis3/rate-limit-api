@@ -1,6 +1,5 @@
 package com.ratelimit.dunning.config;
 
-import com.ratelimit.dunning.dto.FailedBillingEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -25,7 +24,7 @@ public class KafkaConfig {
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, FailedBillingEvent> producerFactory(ObjectMapper mapper) {
+    public ProducerFactory<String, Object> producerFactory(ObjectMapper mapper) {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -35,8 +34,7 @@ public class KafkaConfig {
         kafkaMapper.registerModule(new JavaTimeModule());
         kafkaMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // Use a simple Jackson-based Serializer implementation to avoid relying on specific spring-kafka helper classes
-        Serializer<FailedBillingEvent> valueSerializer = new JacksonSerializer<>(kafkaMapper);
+        Serializer<Object> valueSerializer = new JacksonSerializer<>(kafkaMapper);
 
         return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), valueSerializer);
     }
@@ -75,8 +73,8 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, FailedBillingEvent> kafkaTemplate(
-            ProducerFactory<String, FailedBillingEvent> producerFactory) {
+    public KafkaTemplate<String, Object> kafkaTemplate(
+            ProducerFactory<String, Object> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 }

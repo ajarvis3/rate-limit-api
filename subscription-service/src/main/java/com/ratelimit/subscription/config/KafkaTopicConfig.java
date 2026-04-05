@@ -9,10 +9,19 @@ import org.springframework.kafka.config.TopicBuilder;
 public class KafkaTopicConfig {
 
     public static final String SUBCRIPTION_BILLING_TOPIC = "subscription-billing";
+    public static final String SUBSCRIPTION_CREATED_TOPIC = "subscription-created";
 
     @Bean
-    public NewTopic usageAggregateBillingTopic() {
+    public NewTopic subscriptionBillingTopic() {
         return TopicBuilder.name(SUBCRIPTION_BILLING_TOPIC)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic subscriptionCreatedTopic() {
+        return TopicBuilder.name(SUBSCRIPTION_CREATED_TOPIC)
                 .partitions(1)
                 .replicas(1)
                 .build();
