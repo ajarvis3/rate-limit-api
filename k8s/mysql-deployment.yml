@@ -1,21 +1,12 @@
-"""
-MySQL StatefulSet deployment for local/k8s clusters.
+# Kubernetes manifests for all microservices in this repository
+# Creates a namespace `ratelimit` and Deployments + Services (ClusterIP) for each microservice
 
-This manifest creates:
-- Secret `mysql-secret` with root and app user credentials (change before production)
-- ConfigMap `mysql-initdb-config` containing initial SQL scripts (also provided as files under k8s/mysql-init-scripts/)
-- Service `mysql` (ClusterIP) for cluster access
-- StatefulSet `mysql` (single replica) that mounts the ConfigMap into /docker-entrypoint-initdb.d so the scripts run on first init
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ratelimit
 
-Notes:
-- The ConfigMap duplicates the example SQL from `k8s/mysql-init-scripts/01-init.sql` so a single `kubectl apply -f k8s/mysql-deployment.yml` will create the init scripts in-cluster. If you prefer to manage init scripts outside the manifest, comment out the ConfigMap block and create a configmap from files with:
-
-  kubectl create configmap mysql-initdb-config --from-file=k8s/mysql-init-scripts
-
-- The StatefulSet uses a volumeClaimTemplate for persistent MySQL data. Adjust `storage` and `storageClassName` to match your cluster.
-- This example runs MySQL 8 and is intended for development. For production use an external managed database, backups, and secret management.
-"""
-
+---
 apiVersion: v1
 kind: Secret
 metadata:
@@ -23,14 +14,9 @@ metadata:
   namespace: ratelimit
 type: Opaque
 stringData:
-  # change these values for your environment
   mysql-root-password: "password"
-  mysql-database: "rate_limit_db"
-  mysql-user: "rate_limit_user"
-  mysql-password: "password"
 
 ---
-# ConfigMap containing initial SQL scripts. The files are mounted into /docker-entrypoint-initdb.d
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -38,10 +24,26 @@ metadata:
   namespace: ratelimit
 data:
   01-init.sql: |
-    -- Initial database and user for rate-limit-api
-    CREATE DATABASE IF NOT EXISTS rate_limit_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE USER IF NOT EXISTS 'app'@'%' IDENTIFIED BY 'apppass';
-    GRANT ALL PRIVILEGES ON rate_limit_db.* TO 'app'@'%';
+    CREATE DATABASE IF NOT EXISTS billing_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'billing_user'@'%' IDENTIFIED BY 'password';
+    GRANT ALL PRIVILEGES ON billing_db.* TO 'billing_user'@'%';
+    
+    CREATE DATABASE IF NOT EXISTS dunning_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'dunning_user'@'%' IDENTIFIED BY 'password';
+    GRANT ALL PRIVILEGES ON dunning_db.* TO 'dunning_user'@'%';
+    
+    CREATE DATABASE IF NOT EXISTS subscription_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'subscription_user'@'%' IDENTIFIED BY 'password';
+    GRANT ALL PRIVILEGES ON subscription_db.* TO 'subscription_user'@'%';
+    
+    CREATE DATABASE IF NOT EXISTS usage_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'usage_user'@'%' IDENTIFIED BY 'password';
+    GRANT ALL PRIVILEGES ON usage_db.* TO 'usage_user'@'%';
+    
+    CREATE DATABASE IF NOT EXISTS user_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS 'user_user'@'%' IDENTIFIED BY 'password';
+    GRANT ALL PRIVILEGES ON user_db.* TO 'user_user'@'%';
+
     FLUSH PRIVILEGES;
 
 ---
@@ -86,21 +88,6 @@ spec:
                 secretKeyRef:
                   name: mysql-secret
                   key: mysql-root-password
-            - name: MYSQL_DATABASE
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: mysql-database
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: mysql-user
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-secret
-                  key: mysql-password
           ports:
             - containerPort: 3306
               name: mysql
@@ -122,6 +109,3 @@ spec:
         resources:
           requests:
             storage: 5Gi
-        # Uncomment and set to your cluster's StorageClass if needed
-        # storageClassName: local-path
-

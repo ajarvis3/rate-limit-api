@@ -2,16 +2,20 @@ spring:
   application:
     name: dunning-service
   datasource:
-    url: jdbc:mysql://localhost:3306/dunning_db
-    username: root
+    # When running in Kubernetes, the MySQL service is available at 'mysql'
+    url: jdbc:mysql://mysql:3306/dunning_db
+    username: dunning_user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: dunning-service
       auto-offset-reset: earliest
@@ -25,3 +29,12 @@ spring:
 
 server:
   port: 8085
+
+# Provide Jakarta Persistence properties at the top level so Hibernate can pick them up
+jakarta:
+  persistence:
+    jdbc:
+      url: jdbc:mysql://mysql:3306/dunning_db
+      user: dunning_user
+      password: password
+

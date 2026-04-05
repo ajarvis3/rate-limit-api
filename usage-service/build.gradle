@@ -20,19 +20,19 @@ repositories {
 dependencies {
 	implementation project(':dto-common')
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 	implementation 'org.springframework.boot:spring-boot-starter-kafka'
 	runtimeOnly 'com.mysql:mysql-connector-j'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
-	// H2 in-memory database for @DataJpaTest
 	testRuntimeOnly 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-tasks.named('test') {
+tasks.named('test', Test) {
 	useJUnitPlatform()
+	// Ensure the 'test' Spring profile is active so application-test.properties is used
+	systemProperty 'spring.profiles.active', 'test'
+	// optional: show standard out for debugging
+	testLogging.showStandardStreams = true
 }

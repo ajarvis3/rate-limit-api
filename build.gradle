@@ -87,7 +87,10 @@ microservices.each { svc ->
         def imageTag = "ratelimit/${svc}:latest"
 
         // Execute docker build from the repository root (projectDir)
-        commandLine 'docker', 'build', '-t', imageTag, '-f', "${svc}/Dockerfile", '.'
+        // Support forcing a rebuild by passing -PforceDockerRebuild=true to Gradle.
+        // Always force rebuild: do not use cache and pull latest base images
+        def cmd = ['docker', 'build', '--no-cache', '--pull', '-t', imageTag, '-f', "${svc}/Dockerfile", '.']
+        commandLine cmd
     }
 }
 

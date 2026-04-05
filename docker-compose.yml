@@ -1,0 +1,165 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./k8s/mysql-init-scripts:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:6-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+
+  kafka:
+    image: apache/kafka:latest
+    container_name: kafka
+    depends_on:
+      - mysql
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    command: ["start-dev","--http-enabled=true","--http-port=8080", "--import-realm"]
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: password
+    volumes:
+      - ./keycloak/realm.json:/opt/keycloak/data/import/realm.json
+    ports:
+      - "32080:8080"
+    depends_on:
+      - mysql
+
+  api-gateway:
+    image: ratelimit/api-gateway:latest
+    restart: unless-stopped
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ratelimit/protocol/openid-connect/certs
+    ports:
+      - "8080:8080"
+    depends_on:
+      - hello-api
+      - usage-service
+      - subscription-service
+      - user-service
+
+  hello-api:
+    image: ratelimit/hello-api:latest
+    restart: unless-stopped
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8086:8080"
+    depends_on:
+      - mysql
+
+  usage-service:
+    image: ratelimit/usage-service:latest
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/usage_db"
+      SPRING_DATASOURCE_USERNAME: "usage_user"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_REDIS_HOST: "redis"
+      SPRING_REDIS_PORT: "6379"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8083:8083"
+    depends_on:
+      - mysql
+      - redis
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  subscription-service:
+    image: ratelimit/subscription-service:latest
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/subscription_db"
+      SPRING_DATASOURCE_USERNAME: "subscription_user"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8082:8082"
+    depends_on:
+      - mysql
+
+  billing-service:
+    image: ratelimit/billing-service:latest
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/billing_db"
+      SPRING_DATASOURCE_USERNAME: "billing_user"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8084:8084"
+    depends_on:
+      - mysql
+
+  dunning-service:
+    image: ratelimit/dunning-service:latest
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/dunning_db"
+      SPRING_DATASOURCE_USERNAME: "dunning_user"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8085:8085"
+    depends_on:
+      - mysql
+
+  user-service:
+    image: ratelimit/user-service:latest
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/user_db"
+      SPRING_DATASOURCE_USERNAME: "user_user"
+      SPRING_DATASOURCE_PASSWORD: "password"
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  default:
+    name: ratelimit_network
+

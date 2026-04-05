@@ -1,0 +1,63 @@
+{
+  "realm": "ratelimit",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "api-gateway",
+      "enabled": true,
+      "publicClient": true,
+      "secret": "your-client-secret",
+      "redirectUris": [
+        "https://oauth.pstmn.io/v1/callback",
+        "https://oauth.pstmn.io/v1/browser-callback"
+      ],
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    }
+  ],
+  "roles": {
+    "realm": [
+      { "name": "FREE" },
+      { "name": "PRO" },
+      { "name": "ENTERPRISE" }
+    ]
+  },
+  "users": [
+    {
+      "username": "testuser",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["FREE"]
+    },
+    {
+      "username": "testuser2",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["PRO"]
+    },
+    {
+      "username": "testuser3",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ENTERPRISE"]
+    }
+  ]
+}

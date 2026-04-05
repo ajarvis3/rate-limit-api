@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoders;
 import org.springframework.security.oauth2.server.resource.authentication.ReactiveJwtAuthenticationConverter;
@@ -61,5 +63,17 @@ public class SecurityConfig {
                     .toList());
         });
         return converter;
+    }
+
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder() {
+        NimbusReactiveJwtDecoder decoder = NimbusReactiveJwtDecoder
+                .withJwkSetUri("http://keycloak:8080/realms/ratelimit/protocol/openid-connect/certs")
+                .build();
+
+        // disable issuer validation so localhost tokens are accepted
+        decoder.setJwtValidator(JwtValidators.createDefault());
+
+        return decoder;
     }
 }

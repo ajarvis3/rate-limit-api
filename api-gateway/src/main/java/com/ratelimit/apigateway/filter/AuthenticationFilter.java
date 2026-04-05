@@ -14,7 +14,6 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import reactor.core.publisher.Mono;
 
 @Component
-@Order(1)
 public class AuthenticationFilter implements GlobalFilter, Ordered {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
@@ -33,7 +32,11 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 							.build();
 
 					return chain.filter(exchange.mutate().request(mutatedRequest).build());
-				});
+				})
+				.switchIfEmpty(Mono.defer(() -> {
+					log.debug("No JwtAuthenticationToken present on the exchange; continuing without X-User-Id header");
+					return chain.filter(exchange);
+				}));
 	}
 
     @Override

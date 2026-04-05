@@ -44,7 +44,9 @@ spec:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: ClusterIP
+      # Expose nodePort for external access on cluster nodes (useful for local clusters)
+      nodePort: 30080
+  type: NodePort
 
 ---
 apiVersion: apps/v1

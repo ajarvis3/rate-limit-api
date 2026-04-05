@@ -16,14 +16,20 @@ spring:
           uri: http://usage-service:8080
           predicates:
             - Path=/usage/**
-        - id: anotherService
-          uri: http://another-service:8080
-          predicates:
-            - Path=/another-service/**
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://keycloak/realms/example-realm
+          issuer-uri: http://keycloak:8080/realms/ratelimit
+          jwk-set-uri: http://keycloak:8080/realms/ratelimit/protocol/openid-connect/certs
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.security.oauth2: DEBUG
+    org.springframework.cloud.gateway: DEBUG
+    com.ratelimit.apigateway.filter: DEBUG
+
 server:
   port: 8080
+

@@ -2,16 +2,20 @@ spring:
   application:
     name: billing-service
   datasource:
-    url: jdbc:mysql://localhost:3306/billing_db
-    username: root
+    url: jdbc:mysql://mysql:3306/billing_db
+    username: billing_user
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    database-platform: org.hibernate.dialect.MySQLDialect
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: kafka:9092
     consumer:
       group-id: billing-service
       auto-offset-reset: earliest
@@ -24,3 +28,12 @@ spring:
 
 server:
   port: 8084
+
+# Provide Jakarta Persistence properties at the top level so Hibernate (standalone) can
+# pick them up via the environment name `jakarta.persistence.jdbc.url`.
+jakarta:
+  persistence:
+    jdbc:
+      url: jdbc:mysql://mysql:3306/billing_db
+      user: billing_user
+      password: password
