@@ -48,13 +48,14 @@ class BillingServiceTest {
             billingService.processInvoice(invoice);
 
             assertThat(invoice.getStatus()).isEqualTo("PAYMENT_FAILED");
+            assertThat(invoice.getAttemptCount()).isEqualTo(1);
             verify(invoiceRepository).save(invoice);
             ArgumentCaptor<Object> eventCaptor = ArgumentCaptor.forClass(Object.class);
             verify(kafkaTemplate).send(eq("billing-failed"), eq(userId), eventCaptor.capture());
             FailedBillingEvent sentEvent = (FailedBillingEvent) eventCaptor.getValue();
             assertThat(sentEvent.userId()).isEqualTo(userId);
             assertThat(sentEvent.amount()).isEqualByComparingTo("49.99");
-            // also verify payment-failed event was sent
+            // also verify payment-failed event was sent with attempt count
             verify(kafkaTemplate).send(eq("payment-failed"), eq(userId), any());
         }
     }

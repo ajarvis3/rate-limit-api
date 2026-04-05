@@ -24,10 +24,18 @@ public class BillingService {
 	}
 
 	/**
+	 * Derive a deterministic UUID from a Long id, using 0 as the most-significant bits.
+	 */
+	private static UUID toUuid(Long id) {
+		return id != null ? new UUID(0L, id) : new UUID(0L, 0L);
+	}
+
+	/**
 	 * Process an invoice: 50% chance to mark PAYMENT_FAILED (and emit a FailedBillingEvent),
 	 * 50% to mark PAYMENT_COMPLETE. The invoice is persisted after status update.
 	 */
 	public void processInvoice(Invoice invoice) {
+		invoice.setAttemptCount(invoice.getAttemptCount() + 1);
 		boolean failed = ThreadLocalRandom.current().nextBoolean();
 
 		if (failed) {
@@ -47,8 +55,8 @@ public class BillingService {
 			try {
 				PaymentFailedEvent paymentFailedEvent = new PaymentFailedEvent(
 						UUID.fromString(invoice.getUserId()),
-						UUID.randomUUID(),
-						1
+						toUuid(invoice.getId()),
+						invoice.getAttemptCount()
 				);
 				kafkaTemplate.send("payment-failed", invoice.getUserId(), paymentFailedEvent);
 			} catch (IllegalArgumentException ignored) {
@@ -62,7 +70,7 @@ public class BillingService {
 			try {
 				SubscriptionRenewedEvent renewedEvent = new SubscriptionRenewedEvent(
 						UUID.fromString(invoice.getUserId()),
-						UUID.randomUUID()
+						toUuid(invoice.getId())
 				);
 				kafkaTemplate.send("subscription-renewed", invoice.getUserId(), renewedEvent);
 			} catch (IllegalArgumentException ignored) {

@@ -15,6 +15,8 @@ public class BillingPeriod {
 
     private UUID userId;
 
+    private UUID subscriptionId;
+
     private Instant periodStart;
 
     private Instant periodEnd;
@@ -23,8 +25,9 @@ public class BillingPeriod {
 
     public BillingPeriod() {}
 
-    public BillingPeriod(UUID userId, Instant periodStart, Instant periodEnd) {
+    public BillingPeriod(UUID userId, UUID subscriptionId, Instant periodStart, Instant periodEnd) {
         this.userId = userId;
+        this.subscriptionId = subscriptionId;
         this.periodStart = periodStart;
         this.periodEnd = periodEnd;
         this.invoiceCreated = false;
@@ -40,6 +43,14 @@ public class BillingPeriod {
 
     public void setUserId(UUID userId) {
         this.userId = userId;
+    }
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(UUID subscriptionId) {
+        this.subscriptionId = subscriptionId;
     }
 
     public Instant getPeriodStart() {

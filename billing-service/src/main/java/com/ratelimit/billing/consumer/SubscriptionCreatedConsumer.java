@@ -22,7 +22,7 @@ public class SubscriptionCreatedConsumer {
     @KafkaListener(topics = "subscription-created", groupId = "billing-service")
     public void handleSubscriptionCreated(SubscriptionCreatedEvent event) {
         log.info("Received subscription-created event for userId={}", event.userId());
-        BillingPeriod period = new BillingPeriod(event.userId(), event.periodStart(), event.periodEnd());
+        BillingPeriod period = new BillingPeriod(event.userId(), event.subscriptionId(), event.periodStart(), event.periodEnd());
         billingPeriodRepository.save(period);
     }
 }
