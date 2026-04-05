@@ -49,15 +49,7 @@ public class UserServiceTest {
         when(userRepository.findByKeycloakId("kc-2")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
-            // simulate UUID generation (Hibernate-managed in production)
-            java.lang.reflect.Field f;
-            try {
-                f = User.class.getDeclaredField("id");
-                f.setAccessible(true);
-                f.set(u, UUID.randomUUID());
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            org.springframework.test.util.ReflectionTestUtils.setField(u, "id", UUID.randomUUID());
             return u;
         });
 
@@ -73,13 +65,7 @@ public class UserServiceTest {
         when(userRepository.findByKeycloakId("kc-3")).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
-            try {
-                java.lang.reflect.Field f = User.class.getDeclaredField("id");
-                f.setAccessible(true);
-                f.set(u, UUID.randomUUID());
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
+            org.springframework.test.util.ReflectionTestUtils.setField(u, "id", UUID.randomUUID());
             return u;
         });
 

@@ -24,7 +24,10 @@ public class BillingService {
 	}
 
 	/**
-	 * Derive a deterministic UUID from a Long id, using 0 as the most-significant bits.
+	 * Derives a deterministic UUID from a Long invoice ID using the ID as the
+	 * least-significant bits (most-significant bits set to 0). This ensures
+	 * a consistent, predictable UUID for each invoice without requiring a UUID
+	 * column in the Invoice table.
 	 */
 	private static UUID toUuid(Long id) {
 		return id != null ? new UUID(0L, id) : new UUID(0L, 0L);

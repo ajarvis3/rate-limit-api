@@ -62,9 +62,8 @@ public class SubscriptionService {
         Instant periodEnd = now.plus(30, ChronoUnit.DAYS);
         Subscription subscription = new Subscription(userId, planName, "ACTIVE", now, periodEnd);
         Subscription saved = subscriptionRepository.save(subscription);
-        UUID planId = UUID.nameUUIDFromBytes(planName.getBytes(java.nio.charset.StandardCharsets.UTF_8));
         eventProducer.sendSubscriptionCreated(new SubscriptionCreatedEvent(
-                userId, planId, saved.getId(), now, periodEnd));
+                userId, planNameToUuid(planName), saved.getId(), now, periodEnd));
         return saved;
     }
 
@@ -77,12 +76,14 @@ public class SubscriptionService {
             subscription.setCurrentPeriodStart(newStart);
             subscription.setCurrentPeriodEnd(newEnd);
             subscriptionRepository.save(subscription);
-            UUID planId = UUID.nameUUIDFromBytes(
-                    (subscription.getLevel() != null ? subscription.getLevel() : "FREE")
-                    .getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String planName = subscription.getLevel() != null ? subscription.getLevel() : "FREE";
             eventProducer.sendSubscriptionCreated(new SubscriptionCreatedEvent(
-                    userId, planId, subscription.getId(), newStart, newEnd));
+                    userId, planNameToUuid(planName), subscription.getId(), newStart, newEnd));
         });
+    }
+
+    private static UUID planNameToUuid(String planName) {
+        return UUID.nameUUIDFromBytes(planName.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public void suspendSubscription(UUID userId) {

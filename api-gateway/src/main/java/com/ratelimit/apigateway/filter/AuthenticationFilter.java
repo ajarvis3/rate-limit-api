@@ -21,7 +21,7 @@ import java.util.List;
 public class AuthenticationFilter implements GlobalFilter, Ordered {
 
 	private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
-	private static final List<String> KNOWN_PLANS = List.of("FREE", "PRO", "ENTERPRISE");
+	private static final List<String> KNOWN_PLANS = List.of("ENTERPRISE", "PRO", "FREE");
 
 	private final UserServiceClient userServiceClient;
 
@@ -60,6 +60,9 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 			if (realmAccess instanceof java.util.Map<?, ?> realmMap) {
 				Object roles = realmMap.get("roles");
 				if (roles instanceof Collection<?> roleList) {
+					// KNOWN_PLANS is ordered by precedence (ENTERPRISE > PRO > FREE).
+					// The highest-priority plan found in the user's roles is returned.
+					// If a user has multiple plan roles, the first match in KNOWN_PLANS wins.
 					for (String plan : KNOWN_PLANS) {
 						if (roleList.contains(plan)) {
 							return plan;
