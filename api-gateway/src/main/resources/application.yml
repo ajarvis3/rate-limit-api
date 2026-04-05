@@ -3,19 +3,21 @@ spring:
     name: api-gateway
   data:
     redis:
-      host: localhost
+      host: redis
       port: 6379
   cloud:
     gateway:
-      routes:
-        - id: hello-api #Fill in real names when they're determined
-          uri: http://hello-api:8080
-          predicates:
-            - Path=/api/hello/**
-        - id: usage-service
-          uri: http://usage-service:8080
-          predicates:
-            - Path=/usage/**
+      server:
+        webflux:
+          routes:
+            - id: hello-api
+              uri: http://hello-api:8080
+              predicates:
+                - Path=/api/hello/**
+            - id: usage-service
+              uri: http://usage-service:8083
+              predicates:
+                - Path=/usage/**
   security:
     oauth2:
       resourceserver:
@@ -27,9 +29,11 @@ logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
-    org.springframework.cloud.gateway: DEBUG
     com.ratelimit.apigateway.filter: DEBUG
-
+    com.ratelimit.apigateway.service: DEBUG
+    com.ratelimit.apigateway.config: DEBUG
+    org.springframework.cloud.gateway: TRACE
+    reactor.netty: DEBUG
 server:
   port: 8080
 

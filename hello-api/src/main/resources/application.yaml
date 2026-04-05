@@ -1,8 +1,12 @@
 spring:
     application:
         name: api-gateway
+server:
+  port: 8080
 
 logging:
   level:
     org.springframework.security: DEBUG
     org.springframework.security.oauth2: DEBUG
+    root: INFO
+    com.ratelimit.hello_api.controller: DEBUG

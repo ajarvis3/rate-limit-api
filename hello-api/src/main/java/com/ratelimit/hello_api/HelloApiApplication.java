@@ -1,4 +1,4 @@
-package com.yourapp.hello_api;
+package com.ratelimit.hello_api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

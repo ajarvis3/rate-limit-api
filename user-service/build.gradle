@@ -33,3 +33,12 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Ensure the 'test' profile is active for the test task so tests use application-test.properties
+tasks.named('test', Test) {
+	useJUnitPlatform()
+	systemProperty 'spring.profiles.active', 'test'
+	// optional: show standard out during tests to help debugging
+	testLogging.showStandardStreams = true
+}
+

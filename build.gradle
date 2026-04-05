@@ -72,25 +72,24 @@ microservices.each { svc ->
     tasks.register(taskName, Exec) {
         group = 'docker'
         description = "Build Docker image for ${svc} using ${svc}/Dockerfile"
-
-        // If the project exists and has a bootJar task, depend on it so jar is built first
-        try {
-            def proj = project(":${svc}")
-            proj.tasks.matching { it.name == 'build' }.configureEach { t ->
-                dependsOn t
-            }
-        } catch (org.gradle.api.UnknownProjectException ignored) {
-            // project not present in this multi-project build; continue and let docker build fail if needed
-        }
-
         // Build image tag - use 'latest' tag so Docker Desktop shows a common tag
         def imageTag = "ratelimit/${svc}:latest"
 
-        // Execute docker build from the repository root (projectDir)
-        // Support forcing a rebuild by passing -PforceDockerRebuild=true to Gradle.
-        // Always force rebuild: do not use cache and pull latest base images
-        def cmd = ['docker', 'build', '--no-cache', '--pull', '-t', imageTag, '-f', "${svc}/Dockerfile", '.']
-        commandLine cmd
+        // Gradle tasks to run first: build dto-common and the microservice itself
+        def gradleTasks = ":dto-common:build :${svc}:build"
+
+        // Docker build command (joined into a single shell command)
+        def dockerCmd = "docker build --no-cache --pull -t ${imageTag} -f ${svc}/Dockerfile ."
+
+        // Choose shell invocation depending on OS so this works on Windows and Unix
+        def isWindows = System.getProperty('os.name').toLowerCase().contains('win')
+        if (isWindows) {
+            // Use cmd.exe on Windows
+            commandLine 'cmd', '/c', ".\\gradlew ${gradleTasks} && ${dockerCmd}"
+        } else {
+            // Use sh on Unix-like systems
+            commandLine 'sh', '-c', "./gradlew ${gradleTasks} && ${dockerCmd}"
+        }
     }
 }
 

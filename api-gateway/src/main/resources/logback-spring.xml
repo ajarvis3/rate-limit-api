@@ -1,0 +1,24 @@
+<configuration scan="true">
+    <!-- Use a clear console pattern -->
+    <property name="CONSOLE_LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>utf8</charset>
+        </encoder>
+    </appender>
+
+    <!-- Enable DEBUG for security and gateway packages so SecurityConfig logs are visible -->
+    <logger name="com.ratelimit.apigateway.config" level="DEBUG" />
+    <logger name="com.ratelimit.apigateway.filter" level="DEBUG" />
+    <logger name="com.ratelimit.apigateway.service" level="DEBUG" />
+    <logger name="org.springframework.cloud.gateway" level="DEBUG" />
+    <logger name="org.springframework.security" level="DEBUG" />
+    <logger name="com.ratelimit.apigateway.config" level="DEBUG" />
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+    </root>
+</configuration>
+

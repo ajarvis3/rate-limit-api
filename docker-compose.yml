@@ -64,6 +64,7 @@ services:
     environment:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
       SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI: http://keycloak:8080/realms/ratelimit/protocol/openid-connect/certs
+      SPRING_BOOT_DEBUG: "true"
     ports:
       - "8080:8080"
     depends_on:
